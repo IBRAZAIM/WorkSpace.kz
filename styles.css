@@ -571,6 +571,35 @@ footer a:hover { color: var(--tx2); }
 }
 .footer-links a { color: rgba(255,255,255,.5); text-decoration: none; font-size: 0.85rem; transition: color 0.15s; }
 .footer-links a:hover { color: var(--tx); }
+
+/* ── Dashboard UX ─────────────────────────────────────── */
+.stat-card {
+  padding: 1.5rem; text-align: center; display: flex; flex-direction: column; justify-content: center;
+}
+.stat-value { font-size: 2.2rem; font-weight: 800; font-family: 'Syne', sans-serif; line-height: 1; margin-bottom: 0.5rem; }
+.stat-label { font-size: 0.8rem; font-weight: 600; color: var(--tx3); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.status-pill {
+  display: inline-flex; align-items: center; padding: 0.25rem 0.65rem; border-radius: 20px;
+  font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase;
+}
+.status-pill.CONFIRMED { background: var(--ok-bg); color: var(--ok); border: 1px solid rgba(74,222,128,0.2); }
+.status-pill.PENDING { background: var(--warn-bg); color: var(--warn); border: 1px solid rgba(250,204,21,0.2); }
+.status-pill.CANCELLED { background: var(--err-bg); color: var(--err); border: 1px solid rgba(255,92,92,0.2); }
+.status-pill.COMPLETED { background: rgba(255,255,255,0.1); color: var(--tx2); border: 1px solid var(--bd2); }
+
+.booking-card {
+  display: flex; gap: 1.25rem; align-items: center; justify-content: space-between;
+  padding: 1.5rem 1.75rem !important; transition: background 0.15s;
+}
+.booking-card:hover { background: var(--bg2); }
+
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 4rem 2rem; text-align: center; color: var(--tx2); font-weight: 500;
+}
+.empty-state .icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.8; }
+
 @media (max-width: 1024px) {
   main { padding: 2vw 4vw; }
   header { padding: 0 5vw; height: 56px; }
@@ -615,9 +644,22 @@ footer a:hover { color: var(--tx2); }
   /* Sidebar stack */
   [style*="position:sticky"][style*="width:320px"], 
   [style*="position:sticky"][style*="width: 320px"] { 
-    position: static; width: 100%; order: 2; 
+    position: static !important; width: 100% !important; order: 2; 
   }
   
   /* Hero responsive */
   .hero { padding: 4vw 2vw; text-align: center; }
+}
+
+@media (max-width: 900px) {
+  #roomGrid { grid-template-columns: 1fr !important; padding: 1rem 0 !important; }
+  .booking-widget { position: static !important; width: 100% !important; margin-top: 2rem; }
+}
+
+@media (max-width: 600px) {
+  .spaces-grid, .grid { grid-template-columns: 1fr !important; }
+  .field-row { grid-template-columns: 1fr !important; }
+  .role-cards { flex-direction: column !important; }
+  #photoCarousel { height: 300px !important; }
+  .modal { padding: 1rem !important; border-radius: 12px !important; }
 }

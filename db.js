@@ -7,7 +7,7 @@
   'use strict';
 
   const DB_NAME    = 'WorkSpaceKZ';
-  const DB_VERSION = 6; // bump forces fresh migration
+  const DB_VERSION = 7; // bump forces fresh migration
 
   // ---------- helpers ----------
   function tx(db, store, mode, fn) {

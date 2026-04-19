@@ -119,14 +119,8 @@ window.api = {
   /* ── Admin — Users ──────────────────────────────────────── */
 
   async adminGetUsers() {
-    await DB.ready;
-    const db = await DB.ready;
-    return new Promise((resolve, reject) => {
-      const tx  = db.transaction('users', 'readonly');
-      const req = tx.objectStore('users').getAll();
-      req.onsuccess = () => resolve(req.result.map(u => ({ ...u, password: undefined })));
-      req.onerror   = () => reject(req.error);
-    });
+    const users = await DB.getAllUsers();
+    return users.map(u => ({ ...u, password: undefined }));
   },
 
   async adminCreateUser({ name, email, phone, password, role }) {
@@ -148,10 +142,14 @@ window.api = {
   async adminDeleteUser(email) {
     const db = await DB.ready;
     return new Promise((resolve, reject) => {
-      const tx  = db.transaction('users', 'readwrite');
-      const req = tx.objectStore('users').delete(email);
-      req.onsuccess = () => resolve();
-      req.onerror   = () => reject(req.error);
+      try {
+        const tx  = db.transaction('users', 'readwrite');
+        const req = tx.objectStore('users').delete(email);
+        req.onsuccess = () => resolve();
+        req.onerror   = () => reject(req.error);
+      } catch (e) {
+        reject(e);
+      }
     });
   },
 
@@ -216,10 +214,12 @@ window.api = {
   async adminDeleteRoom(id) {
     const db = await DB.ready;
     return new Promise((resolve, reject) => {
-      const tx  = db.transaction('rooms', 'readwrite');
-      const req = tx.objectStore('rooms').delete(String(id));
-      req.onsuccess = () => resolve();
-      req.onerror   = () => reject(req.error);
+      try {
+        const tx  = db.transaction('rooms', 'readwrite');
+        const req = tx.objectStore('rooms').delete(String(id));
+        req.onsuccess = () => resolve();
+        req.onerror   = () => reject(req.error);
+      } catch (e) { reject(e); }
     });
   },
 
@@ -274,10 +274,12 @@ window.api = {
   async adminDeleteBooking(id) {
     const db = await DB.ready;
     return new Promise((resolve, reject) => {
-      const tx  = db.transaction('bookings', 'readwrite');
-      const req = tx.objectStore('bookings').delete(Number(id));
-      req.onsuccess = () => resolve();
-      req.onerror   = () => reject(req.error);
+      try {
+        const tx  = db.transaction('bookings', 'readwrite');
+        const req = tx.objectStore('bookings').delete(Number(id));
+        req.onsuccess = () => resolve();
+        req.onerror   = () => reject(req.error);
+      } catch (e) { reject(e); }
     });
   },
 };

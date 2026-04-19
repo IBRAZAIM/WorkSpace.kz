@@ -1,176 +1,213 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Каталог кабинетов — WorkSpace.kz</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body data-page="catalog">
-<header>
-  <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
-  <div class="nav-right" id="navRight">
-    <a href="login.html" class="header-back">Войти</a>
-  </div>
-</header>
-
-<main style="display: flex; align-items: flex-start; gap: 2vw; width: 100%;" id="catalogMain">
-  <!-- Filters Sidebar -->
-  <div id="filtersSidebar" style="position: sticky; top: 80px; width: 320px; height: fit-content; padding: 2rem 0; flex-shrink: 0;">
-    <div class="page-card" style="padding: 2rem;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-        <h3 style="margin:0;">Фильтры</h3>
-        <button id="filtersCloseBtn" onclick="toggleFilters()" style="display:none;background:none;border:none;color:var(--tx2);font-size:1.4rem;cursor:pointer;line-height:1;">×</button>
-      </div>
-      
-      <!-- Price -->
-      <div class="field-group">
-        <label>Цена/час</label>
-        <div style="display: flex; gap: 0.5rem;">
-          <input type="range" id="priceMin" min="500" max="3000" value="700" style="flex: 1;">
-          <input type="range" id="priceMax" min="500" max="3000" value="2500" style="flex: 1;">
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--tx2); margin-top: 0.25rem;">
-          <span id="priceMinVal">700₸</span>
-          <span id="priceMaxVal">2500₸</span>
-        </div>
-      </div>
-      
-      <!-- Category -->
-      <div class="field-group">
-        <label>Категория</label>
-        <div id="filterCategories" style="display: flex; flex-direction: column; gap: 0.5rem;">
-          <label><input type="checkbox" value="психологи"> Психологи (23)</label>
-          <label><input type="checkbox" value="репетиторы"> Репетиторы (18)</label>
-          <label><input type="checkbox" value="совещания"> Совещания (31)</label>
-          <label><input type="checkbox" value="IT"> IT (12)</label>
-          <label><input type="checkbox" value="юристы"> Юристы (9)</label>
-        </div>
-      </div>
-      
-      <!-- Amenities -->
-      <div class="field-group">
-        <label>Удобства</label>
-        <div id="filterAmenities" style="display: flex; flex-direction: column; gap: 0.75rem;">
-          <label><input type="checkbox" value="Wi-Fi"> Wi-Fi (147)</label>
-          <label><input type="checkbox" value="Проектор"> Проектор (89)</label>
-          <label><input type="checkbox" value="Парковка"> Парковка (56)</label>
-          <label><input type="checkbox" value="Кофе"> Кофе/чай (34)</label>
-        </div>
-      </div>
-      
-      <button class="btn-primary" onclick="applyCatalogFilters()" style="width: 100%; margin-top: 1rem;">Применить</button>
-      <button class="btn-secondary" onclick="resetFilters()" style="width: 100%; margin-top: 0.5rem;">Сбросить</button>
+  <header>
+    <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
+    <div class="nav-right" id="navRight">
+      <a href="login.html" class="header-back">Войти</a>
     </div>
-  </div>
+  </header>
 
-  <!-- Results -->
-  <div style="flex: 1; min-width: 0;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-      <div>
-        <h1 style="margin: 0; font-size: 2rem;">Каталог кабинетов</h1>
-        <div id="resultsCount" style="color: var(--tx2); font-size: 1.1rem;">147 объявлений</div>
-      </div>
-      <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-        <!-- Mobile filter toggle -->
-        <button id="filterToggleBtn" onclick="toggleFilters()" style="display:none;padding:0.75rem 1rem;border:1px solid var(--bd);border-radius:var(--r-sm);background:var(--bg3);color:var(--tx);font-size:0.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">
-          🔧 Фильтры
-        </button>
-        <select id="sortSelect" style="padding: 0.75rem; border: 1px solid var(--bd); border-radius: var(--r-sm); background: var(--bg3); color: var(--tx); font-family:'DM Sans',sans-serif;">
-          <option>По релевантности</option>
-          <option>По цене (мин→макс)</option>
-          <option>По рейтингу</option>
-          <option>Новизна</option>
-        </select>
+  <main style="display: flex; align-items: flex-start; gap: 2vw; width: 100%;" id="catalogMain">
+    <!-- Filters Sidebar -->
+    <div id="filtersSidebar"
+      style="position: sticky; top: 80px; width: 320px; height: fit-content; padding: 2rem 0; flex-shrink: 0;">
+      <div class="page-card" style="padding: 2rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+          <h3 style="margin:0;">Фильтры</h3>
+          <button id="filtersCloseBtn" onclick="toggleFilters()"
+            style="display:none;background:none;border:none;color:var(--tx2);font-size:1.4rem;cursor:pointer;line-height:1;">×</button>
+        </div>
+
+        <!-- Price -->
+        <div class="field-group">
+          <label>Цена/час</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="range" id="priceMin" min="500" max="3000" value="700" style="flex: 1;">
+            <input type="range" id="priceMax" min="500" max="3000" value="2500" style="flex: 1;">
+          </div>
+          <div
+            style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--tx2); margin-top: 0.25rem;">
+            <span id="priceMinVal">700₸</span>
+            <span id="priceMaxVal">2500₸</span>
+          </div>
+        </div>
+
+        <!-- Category -->
+        <div class="field-group">
+          <label>Категория</label>
+          <div id="filterCategories" style="display: flex; flex-direction: column; gap: 0.5rem;">
+            <label><input type="checkbox" value="психологи"> Психологи (23)</label>
+            <label><input type="checkbox" value="репетиторы"> Репетиторы (18)</label>
+            <label><input type="checkbox" value="совещания"> Совещания (31)</label>
+            <label><input type="checkbox" value="IT"> IT (12)</label>
+            <label><input type="checkbox" value="юристы"> Юристы (9)</label>
+          </div>
+        </div>
+
+        <!-- Amenities -->
+        <div class="field-group">
+          <label>Удобства</label>
+          <div id="filterAmenities" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <label><input type="checkbox" value="Wi-Fi"> Wi-Fi (147)</label>
+            <label><input type="checkbox" value="Проектор"> Проектор (89)</label>
+            <label><input type="checkbox" value="Парковка"> Парковка (56)</label>
+            <label><input type="checkbox" value="Кофе"> Кофе/чай (34)</label>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="applyCatalogFilters()"
+          style="width: 100%; margin-top: 1rem;">Применить</button>
+        <button class="btn-secondary" onclick="resetFilters()"
+          style="width: 100%; margin-top: 0.5rem;">Сбросить</button>
       </div>
     </div>
 
-    <div id="catalogLoader" style="display: flex; align-items: center; justify-content: center; padding: 4rem; color: var(--tx2);">
-      <div style="width: 40px; height: 40px; border: 4px solid var(--bg3); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
-      <span style="margin-left: 1rem;">Загрузка...</span>
+    <!-- Results -->
+    <div style="flex: 1; min-width: 0;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+          <h1 style="margin: 0; font-size: 2rem;">Каталог кабинетов</h1>
+          <div id="resultsCount" style="color: var(--tx2); font-size: 1.1rem;">147 объявлений</div>
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+          <!-- Mobile filter toggle -->
+          <button id="filterToggleBtn" onclick="toggleFilters()"
+            style="display:none;padding:0.75rem 1rem;border:1px solid var(--bd);border-radius:var(--r-sm);background:var(--bg3);color:var(--tx);font-size:0.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">
+            🔧 Фильтры
+          </button>
+          <select id="sortSelect"
+            style="padding: 0.75rem; border: 1px solid var(--bd); border-radius: var(--r-sm); background: var(--bg3); color: var(--tx); font-family:'DM Sans',sans-serif;">
+            <option>По релевантности</option>
+            <option>По цене (мин→макс)</option>
+            <option>По рейтингу</option>
+            <option>Новизна</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="catalogLoader"
+        style="display: flex; align-items: center; justify-content: center; padding: 4rem; color: var(--tx2);">
+        <div
+          style="width: 40px; height: 40px; border: 4px solid var(--bg3); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite;">
+        </div>
+        <span style="margin-left: 1rem;">Загрузка...</span>
+      </div>
+
+      <div id="catalogGrid" class="spaces-grid"
+        style="display: none; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem;"></div>
     </div>
-    
-    <div id="catalogGrid" class="spaces-grid" style="display: none; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem;"></div>
-  </div>
-</main>
+  </main>
 
-<footer style="text-align: center; padding: 3rem 2rem; color: var(--tx2); border-top: 1px solid var(--bd); margin-top: 3rem;">
-  © 2025 WorkSpace.kz · Помощь · Условия · Конфиденциальность
-</footer>
+  <footer
+    style="text-align: center; padding: 3rem 2rem; color: var(--tx2); border-top: 1px solid var(--bd); margin-top: 3rem;">
+    © 2025 WorkSpace.kz · Помощь · Условия · Конфиденциальность
+  </footer>
 
-<div id="toast" class="toast"></div>
+  <div id="toast" class="toast"></div>
 
-<script src="db.js"></script>
-<script src="auth.js"></script>
-<script src="api.js"></script>
-<script src="data.js"></script>
-<script src="main.js" defer></script>
+  <script src="db.js"></script>
+  <script src="auth.js"></script>
+  <script src="api.js"></script>
+  <script src="data.js"></script>
+  <script src="main.js" defer></script>
 
-<!-- PWA Service Worker -->
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
-}
-</script>
+  <!-- PWA Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>
 
-<style>
-@media (max-width: 900px) {
-  #catalogMain { flex-direction: column !important; }
-  #filtersSidebar {
-    position: static !important;
-    width: 100% !important;
-    padding: 0 !important;
-    display: none;
-  }
-  #filtersSidebar.open { display: block; }
-  #filterToggleBtn { display: flex !important; align-items: center; gap: 0.4rem; }
-  #filtersCloseBtn { display: block !important; }
-}
-@media (max-width: 600px) {
-  #catalogMain > div:last-child { padding-left: 0 !important; }
-  #catalogGrid { grid-template-columns: 1fr !important; }
-}
-</style>
-<script>
-function toggleFilters() {
-  document.getElementById('filtersSidebar').classList.toggle('open');
-}
+  <style>
+    @media (max-width: 900px) {
+      #catalogMain {
+        flex-direction: column !important;
+      }
 
-let catalogFilters = null;
+      #filtersSidebar {
+        position: static !important;
+        width: 100% !important;
+        padding: 0 !important;
+        display: none;
+      }
 
-async function loadCatalog() {
-  updateNavbar(Auth?.currentUser || null);
-  document.getElementById('catalogLoader').style.display = 'flex';
-  document.getElementById('catalogGrid').style.display = 'none';
+      #filtersSidebar.open {
+        display: block;
+      }
 
-  if (!catalogFilters) {
-    catalogFilters = {};
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('city')) catalogFilters.city = params.get('city');
-    if (params.get('cat'))  catalogFilters.category = params.get('cat');
-  }
+      #filterToggleBtn {
+        display: flex !important;
+        align-items: center;
+        gap: 0.4rem;
+      }
 
-  try {
-    await DB.ready;
-    const rooms = await Data.getRooms(catalogFilters);
-    displayCatalogRooms(rooms);
-    document.getElementById('resultsCount').textContent = `${rooms.length} объявлений`;
-  } catch(e) {
-    console.error('Catalog load error:', e);
-    document.getElementById('catalogLoader').innerHTML = `<span style="color:var(--err);">Ошибка загрузки: ${e.message}</span>`;
-    return;
-  }
+      #filtersCloseBtn {
+        display: block !important;
+      }
+    }
 
-  document.getElementById('catalogLoader').style.display = 'none';
-  document.getElementById('catalogGrid').style.display = 'grid';
-}
+    @media (max-width: 600px) {
+      #catalogMain>div:last-child {
+        padding-left: 0 !important;
+      }
 
-function displayCatalogRooms(rooms) {
-  const grid = document.getElementById('catalogGrid');
-  grid.innerHTML = rooms.map(room => `
+      #catalogGrid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+  <script>
+    function toggleFilters() {
+      document.getElementById('filtersSidebar').classList.toggle('open');
+    }
+
+    let catalogFilters = null;
+
+    async function loadCatalog() {
+      updateNavbar(Auth?.currentUser || null);
+      document.getElementById('catalogLoader').style.display = 'flex';
+      document.getElementById('catalogGrid').style.display = 'none';
+
+      if (!catalogFilters) {
+        catalogFilters = {};
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('city')) catalogFilters.city = params.get('city');
+        if (params.get('cat')) catalogFilters.category = params.get('cat');
+      }
+
+      try {
+        await DB.ready;
+        const rooms = await Data.getRooms(catalogFilters);
+        displayCatalogRooms(rooms);
+        document.getElementById('resultsCount').textContent = `${rooms.length} объявлений`;
+      } catch (e) {
+        console.error('Catalog load error:', e);
+        document.getElementById('catalogLoader').innerHTML = `<span style="color:var(--err);">Ошибка загрузки: ${e.message}</span>`;
+        return;
+      }
+
+      document.getElementById('catalogLoader').style.display = 'none';
+      document.getElementById('catalogGrid').style.display = 'grid';
+    }
+
+    function displayCatalogRooms(rooms) {
+      const grid = document.getElementById('catalogGrid');
+      grid.innerHTML = rooms.map(room => `
     <div class="space-card" onclick="window.open('room.html?id=${room.id}', '_self')" style="cursor: pointer;">
       <div class="space-img-container">
         <img src="${room.img || ''}" alt="${room.title}" class="space-img" onerror="this.onerror=null;this.src='https://placehold.co/600x400/18181C/5A5A62?text=Нет+фото';">
@@ -192,33 +229,34 @@ function displayCatalogRooms(rooms) {
       </div>
     </div>
   `).join('');
-}
+    }
 
-function applyCatalogFilters() {
-  if (!catalogFilters) catalogFilters = {};
-  catalogFilters.priceMin = parseInt(document.getElementById('priceMin').value);
-  catalogFilters.priceMax = parseInt(document.getElementById('priceMax').value);
+    function applyCatalogFilters() {
+      if (!catalogFilters) catalogFilters = {};
+      catalogFilters.priceMin = parseInt(document.getElementById('priceMin').value);
+      catalogFilters.priceMax = parseInt(document.getElementById('priceMax').value);
 
-  const cats = Array.from(document.querySelectorAll('#filterCategories input:checked')).map(cb => cb.value);
-  if (cats.length) catalogFilters.category = cats.join(',');
-  else delete catalogFilters.category;
+      const cats = Array.from(document.querySelectorAll('#filterCategories input:checked')).map(cb => cb.value);
+      if (cats.length) catalogFilters.category = cats.join(',');
+      else delete catalogFilters.category;
 
-  const amens = Array.from(document.querySelectorAll('#filterAmenities input:checked')).map(cb => cb.value);
-  if (amens.length) catalogFilters.amenities = amens.join(',');
-  else delete catalogFilters.amenities;
+      const amens = Array.from(document.querySelectorAll('#filterAmenities input:checked')).map(cb => cb.value);
+      if (amens.length) catalogFilters.amenities = amens.join(',');
+      else delete catalogFilters.amenities;
 
-  loadCatalog();
-}
+      loadCatalog();
+    }
 
-function resetFilters() {
-  catalogFilters = {};
-  document.getElementById('priceMin').value = '700';
-  document.getElementById('priceMax').value = '2500';
-  document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-  loadCatalog();
-}
+    function resetFilters() {
+      catalogFilters = {};
+      document.getElementById('priceMin').value = '700';
+      document.getElementById('priceMax').value = '2500';
+      document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+      loadCatalog();
+    }
 
-document.addEventListener('DOMContentLoaded', loadCatalog);
-</script>
+    document.addEventListener('DOMContentLoaded', loadCatalog);
+  </script>
 </body>
+
 </html>

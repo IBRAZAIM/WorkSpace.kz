@@ -6,8 +6,8 @@
 (function () {
   'use strict';
 
-  const DB_NAME    = 'WorkSpaceKZ';
-  const DB_VERSION = 7; // bump forces fresh migration
+  const DB_NAME    = 'WorkSpaceV8'; // Полностью новое имя для обхода кэша
+  const DB_VERSION = 1;
 
   // ---------- helpers ----------
   function tx(db, store, mode, fn) {

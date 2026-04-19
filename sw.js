@@ -1,5 +1,5 @@
 // WorkSpace.kz Service Worker (Offline PWA)
-const CACHE_NAME = 'workspace-v2';
+const CACHE_NAME = 'workspace-v5';
 const urlsToCache = [
   './index.html',
   './styles.css',

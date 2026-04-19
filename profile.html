@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,9 @@
   <meta name="description" content="Настройки профиля WorkSpace.kz — имя, телефон, роль.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <style>
     .info-row {
@@ -20,6 +23,7 @@
       display: flex;
       align-items: center;
     }
+
     .avatar-circle {
       width: 72px;
       height: 72px;
@@ -35,172 +39,179 @@
     }
   </style>
 </head>
+
 <body data-page="profile">
-<header>
-  <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
-  <div class="nav-right">
-    <span id="userName" style="font-size:0.9rem;color:var(--accent);font-weight:600;"></span>
-    <a href="index.html" class="header-back">Главная</a>
-    <a href="dashboard.html" class="header-back">Дашборд</a>
-    <a href="#" onclick="Auth.logout(); window.location.href='index.html'; return false" class="header-back">Выход</a>
-  </div>
-</header>
+  <header>
+    <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
+    <div class="nav-right">
+      <span id="userName" style="font-size:0.9rem;color:var(--accent);font-weight:600;"></span>
+      <a href="index.html" class="header-back">Главная</a>
+      <a href="dashboard.html" class="header-back">Дашборд</a>
+      <a href="#" onclick="Auth.logout(); window.location.href='index.html'; return false" class="header-back">Выход</a>
+    </div>
+  </header>
 
-<main style="max-width: 1000px; margin: 4vw auto; width: 100%;">
+  <main style="max-width: 1000px; margin: 4vw auto; width: 100%;">
 
-  <!-- Profile card -->
-  <div class="page-card">
-    <!-- Header row -->
-    <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
-      <div class="avatar-circle" id="avatarCircle">?</div>
-      <div>
-        <h1 class="card-title" style="margin: 0 0 0.25rem;" id="profileHeading">Профиль</h1>
-        <div id="profileRoleBadge" style="display:inline-block;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.78rem;font-weight:700;background:var(--ok-bg);color:var(--ok);"></div>
+    <!-- Profile card -->
+    <div class="page-card">
+      <!-- Header row -->
+      <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="avatar-circle" id="avatarCircle">?</div>
+        <div>
+          <h1 class="card-title" style="margin: 0 0 0.25rem;" id="profileHeading">Профиль</h1>
+          <div id="profileRoleBadge"
+            style="display:inline-block;padding:0.25rem 0.75rem;border-radius:20px;font-size:0.78rem;font-weight:700;background:var(--ok-bg);color:var(--ok);">
+          </div>
+        </div>
+      </div>
+
+      <!-- View mode -->
+      <div id="viewMode">
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Имя</label>
+            <div class="info-row" id="v-name"></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Телефон</label>
+            <div class="info-row" id="v-phone">—</div>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Email</label>
+            <div class="info-row" id="v-email" style="color:var(--tx2);"></div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Дата регистрации</label>
+            <div class="info-row" id="v-joined" style="color:var(--tx2);"></div>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="enterEdit()"
+          style="margin-top:1.5rem;width:auto;padding:0.75rem 1.5rem;">✏️ Редактировать</button>
+      </div>
+
+      <!-- Edit mode -->
+      <div id="editMode" style="display:none;">
+        <div class="field-row">
+          <div class="field-group" id="fg-eName">
+            <label class="field-label" for="eName">Имя</label>
+            <input class="field" id="eName" placeholder="Ваше имя">
+            <p class="field-error">Укажите имя</p>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="ePhone">Телефон</label>
+            <input class="field" id="ePhone" placeholder="+7 777 000 0000">
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+          <button class="btn-primary" onclick="saveProfile()" id="saveBtn" style="width:auto;padding:0.75rem 1.5rem;">💾
+            Сохранить</button>
+          <button class="btn-secondary" onclick="cancelEdit()" style="width:auto;padding:0.75rem 1.5rem;">✕
+            Отмена</button>
+        </div>
       </div>
     </div>
 
-    <!-- View mode -->
-    <div id="viewMode">
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Имя</label>
-          <div class="info-row" id="v-name"></div>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Телефон</label>
-          <div class="info-row" id="v-phone">—</div>
-        </div>
-      </div>
-      <div class="field-row">
-        <div class="field-group">
-          <label class="field-label">Email</label>
-          <div class="info-row" id="v-email" style="color:var(--tx2);"></div>
-        </div>
-        <div class="field-group">
-          <label class="field-label">Дата регистрации</label>
-          <div class="info-row" id="v-joined" style="color:var(--tx2);"></div>
-        </div>
-      </div>
-      <button class="btn-primary" onclick="enterEdit()" style="margin-top:1.5rem;width:auto;padding:0.75rem 1.5rem;">✏️ Редактировать</button>
+    <!-- Bookings stub (now live via dashboard) -->
+    <div class="page-card" style="margin-top:2rem;padding:2rem;text-align:center;">
+      <p style="color:var(--tx2);">Для управления бронями перейдите в
+        <a href="dashboard.html" style="color:var(--accent);font-weight:600;">Дашборд</a>.
+      </p>
     </div>
+  </main>
 
-    <!-- Edit mode -->
-    <div id="editMode" style="display:none;">
-      <div class="field-row">
-        <div class="field-group" id="fg-eName">
-          <label class="field-label" for="eName">Имя</label>
-          <input class="field" id="eName" placeholder="Ваше имя">
-          <p class="field-error">Укажите имя</p>
-        </div>
-        <div class="field-group">
-          <label class="field-label" for="ePhone">Телефон</label>
-          <input class="field" id="ePhone" placeholder="+7 777 000 0000">
-        </div>
-      </div>
-      <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
-        <button class="btn-primary" onclick="saveProfile()" id="saveBtn" style="width:auto;padding:0.75rem 1.5rem;">💾 Сохранить</button>
-        <button class="btn-secondary" onclick="cancelEdit()" style="width:auto;padding:0.75rem 1.5rem;">✕ Отмена</button>
-      </div>
-    </div>
-  </div>
+  <footer>© 2025 WorkSpace.kz</footer>
+  <div id="toast" class="toast"></div>
 
-  <!-- Bookings stub (now live via dashboard) -->
-  <div class="page-card" style="margin-top:2rem;padding:2rem;text-align:center;">
-    <p style="color:var(--tx2);">Для управления бронями перейдите в
-      <a href="dashboard.html" style="color:var(--accent);font-weight:600;">Дашборд</a>.
-    </p>
-  </div>
-</main>
+  <script src="db.js"></script>
+  <script src="auth.js"></script>
+  <script src="api.js"></script>
+  <script src="data.js"></script>
+  <script src="main.js" defer></script>
+  <script>
+    let _user = null;
 
-<footer>© 2025 WorkSpace.kz</footer>
-<div id="toast" class="toast"></div>
+    // ── Populate view fields ──────────────────────────────────────
+    function fillView(user) {
+      _user = user;
+      const initial = (user.name || '?')[0].toUpperCase();
+      document.getElementById('avatarCircle').textContent = initial;
+      document.getElementById('profileHeading').textContent = user.name || 'Профиль';
+      document.getElementById('userName').textContent = user.name || '';
+      document.getElementById('profileRoleBadge').textContent =
+        user.role === 'landlord' ? '🏢 Арендодатель' : '🔑 Арендатор';
+      document.getElementById('v-name').textContent = user.name || '—';
+      document.getElementById('v-phone').textContent = user.phone || '—';
+      document.getElementById('v-email').textContent = user.email || '—';
+      document.getElementById('v-joined').textContent = user.joined
+        ? new Date(user.joined).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+        : 'Недавно';
+    }
 
-<script src="db.js"></script>
-<script src="auth.js"></script>
-<script src="api.js"></script>
-<script src="data.js"></script>
-<script src="main.js" defer></script>
-<script>
-let _user = null;
+    // ── Edit mode ─────────────────────────────────────────────────
+    function enterEdit() {
+      document.getElementById('eName').value = _user?.name || '';
+      document.getElementById('ePhone').value = _user?.phone || '';
+      document.getElementById('viewMode').style.display = 'none';
+      document.getElementById('editMode').style.display = 'block';
+    }
+    function cancelEdit() {
+      document.getElementById('viewMode').style.display = 'block';
+      document.getElementById('editMode').style.display = 'none';
+    }
 
-// ── Populate view fields ──────────────────────────────────────
-function fillView(user) {
-  _user = user;
-  const initial = (user.name || '?')[0].toUpperCase();
-  document.getElementById('avatarCircle').textContent = initial;
-  document.getElementById('profileHeading').textContent = user.name || 'Профиль';
-  document.getElementById('userName').textContent = user.name || '';
-  document.getElementById('profileRoleBadge').textContent =
-    user.role === 'landlord' ? '🏢 Арендодатель' : '🔑 Арендатор';
-  document.getElementById('v-name').textContent   = user.name  || '—';
-  document.getElementById('v-phone').textContent  = user.phone || '—';
-  document.getElementById('v-email').textContent  = user.email || '—';
-  document.getElementById('v-joined').textContent = user.joined
-    ? new Date(user.joined).toLocaleDateString('ru-RU', { day:'numeric', month:'long', year:'numeric' })
-    : 'Недавно';
-}
+    // ── Save ──────────────────────────────────────────────────────
+    async function saveProfile() {
+      const name = document.getElementById('eName').value.trim();
+      const phone = document.getElementById('ePhone').value.trim();
 
-// ── Edit mode ─────────────────────────────────────────────────
-function enterEdit() {
-  document.getElementById('eName').value  = _user?.name  || '';
-  document.getElementById('ePhone').value = _user?.phone || '';
-  document.getElementById('viewMode').style.display = 'none';
-  document.getElementById('editMode').style.display = 'block';
-}
-function cancelEdit() {
-  document.getElementById('viewMode').style.display = 'block';
-  document.getElementById('editMode').style.display = 'none';
-}
+      if (!name) {
+        document.getElementById('fg-eName').classList.add('show-error');
+        return;
+      }
+      document.getElementById('fg-eName').classList.remove('show-error');
 
-// ── Save ──────────────────────────────────────────────────────
-async function saveProfile() {
-  const name  = document.getElementById('eName').value.trim();
-  const phone = document.getElementById('ePhone').value.trim();
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Сохранение…';
 
-  if (!name) {
-    document.getElementById('fg-eName').classList.add('show-error');
-    return;
-  }
-  document.getElementById('fg-eName').classList.remove('show-error');
+      try {
+        const result = await window.api.updateProfile(Auth.currentUser.email, { name, phone });
+        fillView(result);
+        cancelEdit();
+        Utils.showToast('Профиль обновлён!', 'success');
+      } catch (e) {
+        Utils.showToast(e.message || 'Ошибка сохранения', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Сохранить';
+      }
+    }
 
-  const btn = document.getElementById('saveBtn');
-  btn.disabled = true;
-  btn.textContent = 'Сохранение…';
+    // ── Page init ─────────────────────────────────────────────────
+    async function initProfile() {
+      await DB.ready;
 
-  try {
-    const result = await window.api.updateProfile(Auth.currentUser.email, { name, phone });
-    fillView(result);
-    cancelEdit();
-    Utils.showToast('Профиль обновлён!', 'success');
-  } catch (e) {
-    Utils.showToast(e.message || 'Ошибка сохранения', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '💾 Сохранить';
-  }
-}
+      if (!Auth.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+      }
 
-// ── Page init ─────────────────────────────────────────────────
-async function initProfile() {
-  await DB.ready;
+      const user = Auth.currentUser;
+      try {
+        const fresh = await DB.getUser(user.email);
+        fillView(fresh ? { ...user, ...fresh } : user);
+        if (fresh) Auth.updateCurrentUser({ name: fresh.name, phone: fresh.phone });
+      } catch {
+        fillView(user);
+      }
+      updateNavbar(Auth.currentUser);
+    }
 
-  if (!Auth.isLoggedIn()) {
-    window.location.href = 'login.html';
-    return;
-  }
-
-  const user = Auth.currentUser;
-  try {
-    const fresh = await DB.getUser(user.email);
-    fillView(fresh ? { ...user, ...fresh } : user);
-    if (fresh) Auth.updateCurrentUser({ name: fresh.name, phone: fresh.phone });
-  } catch {
-    fillView(user);
-  }
-  updateNavbar(Auth.currentUser);
-}
-
-document.addEventListener('DOMContentLoaded', initProfile);
-</script>
+    document.addEventListener('DOMContentLoaded', initProfile);
+  </script>
 </body>
+
 </html>

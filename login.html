@@ -510,12 +510,16 @@
 
       <button class="btn-primary" id="loginBtn" onclick="doLogin()">Войти в кабинет</button>
 
-      <div class="divider"><div class="divider-line"></div><span class="divider-text">или</span><div class="divider-line"></div></div>
+      <div class="divider"><div class="divider-line"></div><span class="divider-text">Демо-доступ</span><div class="divider-line"></div></div>
 
-      <button class="btn-secondary" onclick="showDemoLogin()">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1L8.8 5.2L13.5 5.7L10.1 8.7L11.1 13.5L7 11L2.9 13.5L3.9 8.7L.5 5.7L5.2 5.2L7 1Z" fill="currentColor"/></svg>
-        Демо-доступ (demo@renter.kz)
-      </button>
+      <div style="display:flex; gap:0.5rem; flex-direction:column;">
+        <button class="btn-secondary" onclick="fillDemo('tenant')">
+          <span style="margin-right:0.5rem">🔑</span>Арендатор
+        </button>
+        <button class="btn-secondary" onclick="fillDemo('landlord')">
+          <span style="margin-right:0.5rem">🏢</span>Арендодатель
+        </button>
+      </div>
     </div>
 
     <!-- ── REGISTER PANEL ──────────────────────────────── -->
@@ -851,9 +855,17 @@ async function doForgot() {
 }
 
 /* ─── Demo login ──────────────────────────────────────────── */
-async function showDemoLogin() {
-  document.getElementById('loginEmail').value = 'demo@tenant.kz';
-  document.getElementById('loginPassword').value = 'password123';
+async function fillDemo(role) {
+  if (role === 'tenant') {
+    document.getElementById('loginEmail').value = 'demo@tenant.kz';
+    document.getElementById('loginPassword').value = 'password123';
+  } else if (role === 'admin') {
+    document.getElementById('loginEmail').value = 'admin@workspace.kz';
+    document.getElementById('loginPassword').value = 'admin123';
+  } else {
+    document.getElementById('loginEmail').value = 'demo@landlord.kz';
+    document.getElementById('loginPassword').value = 'password123';
+  }
   showToast('Демо-данные заполнены', 'default');
   await new Promise(r => setTimeout(r, 300));
   doLogin();

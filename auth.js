@@ -12,7 +12,7 @@
     try {
       const raw = localStorage.getItem(TOKEN_KEY);
       if (!raw) return null;
-      return JSON.parse(atob(raw));
+      return JSON.parse(decodeURIComponent(escape(atob(raw))));
     } catch {
       localStorage.removeItem(TOKEN_KEY);
       return null;
@@ -26,7 +26,7 @@
       phone: user.phone || '',
       role:  user.role  || 'tenant',
     };
-    localStorage.setItem(TOKEN_KEY, btoa(JSON.stringify(payload)));
+    localStorage.setItem(TOKEN_KEY, btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
     window.Auth.currentUser = payload;
     return payload;
   }

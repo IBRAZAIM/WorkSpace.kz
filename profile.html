@@ -35,7 +35,7 @@
     }
   </style>
 </head>
-<body>
+<body data-page="profile">
 <header>
   <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
   <div class="nav-right">
@@ -115,8 +115,10 @@
 <footer>© 2025 WorkSpace.kz</footer>
 <div id="toast" class="toast"></div>
 
+<script src="db.js"></script>
+<script src="auth.js"></script>
 <script src="api.js"></script>
-<script src="auth.js" defer></script>
+<script src="data.js"></script>
 <script src="main.js" defer></script>
 <script>
 let _user = null;
@@ -166,12 +168,13 @@ async function saveProfile() {
   btn.textContent = 'Сохранение…';
 
   try {
-    const updated = await window.api.updateProfile({ name, phone });
-    // Keep AuthManager in sync
-    if (AuthManager.currentUser) {
-      AuthManager.currentUser = { ...AuthManager.currentUser, name: updated.name, phone: updated.phone };
-    }
-    fillView(updated);
+    await WorkSpaceDB.dbReady;
+    const user = AuthManager.currentUser;
+    const updated = { ...user, name, phone, password: await WorkSpaceDB.getUser(user.email).then(u => u?.password || '') };
+    await WorkSpaceDB.addUser(updated);
+    AuthManager.currentUser = { ...user, name, phone };
+    AuthManager._saveUser(AuthManager.currentUser);
+    fillView(AuthManager.currentUser);
     cancelEdit();
     Utils.showToast('Профиль обновлён!', 'success');
   } catch (e) {
@@ -184,27 +187,28 @@ async function saveProfile() {
 
 // ── Page init ─────────────────────────────────────────────────
 async function initProfile() {
-  // Wait for auth.js DOMContentLoaded handler to finish
-  await new Promise(r => setTimeout(r, 60));
+  await WorkSpaceDB.dbReady;
 
   if (!AuthManager.isLoggedIn()) {
     window.location.href = 'login.html';
     return;
   }
 
-  // Show cached data immediately for perceived speed
-  fillView(AuthManager.getUser());
-
-  // Then fetch fresh from server
+  const user = AuthManager.currentUser;
+  // Load full user data from DB
   try {
-    const fresh = await window.api.getProfile();
-    if (AuthManager.currentUser) {
-      AuthManager.currentUser = { ...AuthManager.currentUser, ...fresh };
+    const fresh = await WorkSpaceDB.getUser(user.email);
+    if (fresh) {
+      // Update cached user with full DB record
+      AuthManager.currentUser = { ...user, ...fresh };
+      fillView(AuthManager.currentUser);
+    } else {
+      fillView(user);
     }
-    fillView(fresh);
   } catch {
-    // Fallback already shown above; no error toast needed
+    fillView(user);
   }
+  updateNavbar(AuthManager.currentUser);
 }
 
 document.addEventListener('DOMContentLoaded', initProfile);

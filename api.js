@@ -1,277 +1,254 @@
-// WorkSpace.kz - API Client
-// All frontend-to-backend communication goes through this module.
+// WorkSpace.kz — API Layer (IndexedDB-backed, no fetch proxy)
+// All methods return plain JS objects / arrays.
 
-const API_BASE = 'http://localhost:3001/api';
-
-// Token is stored as a plain string (just the JWT), not as JSON.
-// Legacy: older code stored the whole user object as JSON under 'workspace_token'.
-// We handle both below.
-function _readToken() {
-  const raw = localStorage.getItem('workspace_token');
-  if (!raw || raw === 'null' || raw === 'undefined') return null;
-  try {
-    const parsed = JSON.parse(raw);
-    if (typeof parsed === 'object' && parsed !== null && parsed.token) {
-      return parsed.token;
-    }
-    if (typeof parsed === 'string') {
-      return parsed;
-    }
-    return null;
-  } catch {
-    // If not JSON, it's a raw string (new format)
-    return raw;
-  }
-}
-
-async function apiCall(path, options = {}) {
-  const token = _readToken();
-  const headers = {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-    ...options.headers,
-  };
-  const resp = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({ error: 'Ошибка сети' }));
-    throw new Error(err.error || `HTTP ${resp.status}`);
-  }
-  return resp.json();
-}
-
-// ── Auth ───────────────────────────────────────────────────────
-async function login(email, password) {
-  const data = await apiCall('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password }),
-  });
-  localStorage.setItem('workspace_token', data.token);
-  localStorage.setItem('workspace_user', JSON.stringify(data.user));
-  return data.user;
-}
-
-async function register({ name, phone, email, password, role }) {
-  const data = await apiCall('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify({ name, phone, email, password, role }),
-  });
-  localStorage.setItem('workspace_token', data.token);
-  localStorage.setItem('workspace_user', JSON.stringify(data.user));
-  return data.user;
-}
-
-function logout() {
-  localStorage.removeItem('workspace_token');
-  localStorage.removeItem('workspace_user');
-}
-
-async function getProfile() {
-  return apiCall('/auth/me');
-}
-
-async function updateProfile({ name, phone }) {
-  const updated = await apiCall('/auth/profile', {
-    method: 'PATCH',
-    body: JSON.stringify({ name, phone }),
-  });
-  const cached = getCachedUser();
-  if (cached) {
-    localStorage.setItem('workspace_user', JSON.stringify({ ...cached, name: updated.name, phone: updated.phone }));
-  }
-  return updated;
-}
-
-function getCachedUser() {
-  try {
-    return JSON.parse(localStorage.getItem('workspace_user'));
-  } catch {
-    return null;
-  }
-}
-
-async function initAuth() {
-  if (!_readToken()) return null;
-  try {
-    const user = await apiCall('/auth/me');
-    localStorage.setItem('workspace_user', JSON.stringify(user));
-    return user;
-  } catch {
-    logout();
-    return null;
-  }
-}
-
-// ── Rooms ──────────────────────────────────────────────────────
-async function getRooms(filters = {}) {
-  try {
-    const cleaned = Object.fromEntries(
-      Object.entries(filters).filter(([, v]) => v !== '' && v != null)
-    );
-    const params = new URLSearchParams(cleaned).toString();
-    return await apiCall(`/rooms${params ? '?' + params : ''}`);
-  } catch (err) {
-    console.warn('Backend unavailable, using static rooms:', err.message);
-    return window.STATIC_ROOMS || [];
-  }
-}
-
-async function getRoom(id) {
-  try {
-    return await apiCall(`/rooms/${id}`);
-  } catch (err) {
-    console.warn('Backend unavailable, finding in static rooms:', err.message);
-    const rooms = window.STATIC_ROOMS || [];
-    return rooms.find(r => String(r.id) === String(id)) || rooms[0] || null;
-  }
-}
-
-async function getAvailability(roomId, date) {
-  return apiCall(`/rooms/${roomId}/availability?date=${date}`);
-}
-
-// ── Bookings ───────────────────────────────────────────────────
-async function getBookings() {
-  return apiCall('/bookings');
-}
-
-async function addBooking({ room_id, slots, booking_date }) {
-  return apiCall('/bookings', {
-    method: 'POST',
-    body: JSON.stringify({ room_id, slots, booking_date }),
-  });
-}
-
-async function cancelBooking(id) {
-  return apiCall(`/bookings/${id}/cancel`, { method: 'PATCH' });
-}
-
-// ── Host tools ─────────────────────────────────────────────────
-async function getHostRooms() {
-  return apiCall('/host/rooms');
-}
-
-async function getHostBookings() {
-  return apiCall('/host/bookings');
-}
-
-async function createRoom(roomData) {
-  return apiCall('/rooms', {
-    method: 'POST',
-    body: JSON.stringify(roomData),
-  });
-}
-
-async function updateRoom(id, roomData) {
-  return apiCall(`/rooms/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(roomData),
-  });
-}
-
-async function deleteRoom(id) {
-  return apiCall(`/rooms/${id}`, { method: 'DELETE' });
-}
-
-async function blockSlots({ room_id, booking_date, slots }) {
-  return apiCall(`/host/rooms/${room_id}/block`, {
-    method: 'POST',
-    body: JSON.stringify({ booking_date, slots }),
-  });
-}
-
-// ── Admin ──────────────────────────────────────────────────────
-// All admin endpoints require role === 'admin' on the backend (JWT-verified).
-
-// Users
-async function adminGetUsers() {
-  return apiCall('/admin/users');
-}
-
-async function adminCreateUser({ name, email, phone, password, role }) {
-  return apiCall('/admin/users', {
-    method: 'POST',
-    body: JSON.stringify({ name, email, phone, password, role }),
-  });
-}
-
-async function adminUpdateUser(id, { name, email, phone, role }) {
-  return apiCall(`/admin/users/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ name, email, phone, role }),
-  });
-}
-
-async function adminDeleteUser(id) {
-  return apiCall(`/admin/users/${id}`, { method: 'DELETE' });
-}
-
-// Rooms (admin sees all, not just own)
-async function adminGetRooms() {
-  return apiCall('/admin/rooms');
-}
-
-async function adminCreateRoom(roomData) {
-  return apiCall('/admin/rooms', {
-    method: 'POST',
-    body: JSON.stringify(roomData),
-  });
-}
-
-async function adminUpdateRoom(id, roomData) {
-  return apiCall(`/admin/rooms/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(roomData),
-  });
-}
-
-async function adminDeleteRoom(id) {
-  return apiCall(`/admin/rooms/${id}`, { method: 'DELETE' });
-}
-
-// Bookings (admin sees all)
-async function adminGetBookings() {
-  return apiCall('/admin/bookings');
-}
-
-async function adminCreateBooking(payload) {
-  return apiCall('/admin/bookings', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-}
-
-async function adminUpdateBooking(id, payload) {
-  return apiCall(`/admin/bookings/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(payload),
-  });
-}
-
-async function adminDeleteBooking(id) {
-  return apiCall(`/admin/bookings/${id}`, { method: 'DELETE' });
-}
-
-// Stats summary
-async function adminGetStats() {
-  return apiCall('/admin/stats');
-}
-
-// ── Export ─────────────────────────────────────────────────────
 window.api = {
-  // auth
-  login, register, logout, initAuth,
-  getProfile, updateProfile, getCachedUser,
-  // rooms
-  getRooms, getRoom, getAvailability,
-  // bookings
-  getBookings, addBooking, cancelBooking,
-  // host
-  getHostRooms, getHostBookings, createRoom, updateRoom, deleteRoom, blockSlots,
-  // admin
-  adminGetUsers, adminCreateUser, adminUpdateUser, adminDeleteUser,
-  adminGetRooms, adminCreateRoom, adminUpdateRoom, adminDeleteRoom,
-  adminGetBookings, adminCreateBooking, adminUpdateBooking, adminDeleteBooking,
-  adminGetStats,
-  // util
-  getToken: () => _readToken(),
+
+  /* ── Rooms ─────────────────────────────────────────── */
+
+  async getRooms(filters = {}) {
+    await WorkSpaceDB.dbReady;
+    return WorkSpaceDB.getRooms(filters);
+  },
+
+  async getRoom(id) {
+    await WorkSpaceDB.dbReady;
+    const room = await WorkSpaceDB.getRoom(String(id));
+    if (!room) throw new Error('Кабинет не найден');
+    return room;
+  },
+
+  /* ── Auth ──────────────────────────────────────────── */
+
+  async login(email, password) {
+    await WorkSpaceDB.dbReady;
+    const user = await WorkSpaceDB.getUser(email);
+    if (!user) throw new Error('Пользователь не найден');
+    const stored = user.password;
+    const ok = stored === btoa(password) || stored === password;
+    if (!ok) throw new Error('Неверный пароль');
+    return { email: user.email, role: user.role, name: user.name, phone: user.phone };
+  },
+
+  /* ── Bookings ──────────────────────────────────────── */
+
+  async getBookings() {
+    await WorkSpaceDB.dbReady;
+    const user = AuthManager.currentUser;
+    if (!user) throw new Error('Не авторизован');
+
+    const all = await WorkSpaceDB.getAllBookings();
+    const list = user.role === 'admin'
+      ? all
+      : all.filter(b => b.userEmail === user.email);
+
+    return Promise.all(list.map(async b => {
+      let room = null;
+      try { room = await WorkSpaceDB.getRoom(String(b.roomId)); } catch {}
+      return {
+        id:           b.id,
+        room_id:      b.roomId,
+        room_title:   room?.title  || b.roomId,
+        room_img:     room?.img    || '',
+        booking_date: b.date,
+        slot:         b.slots,
+        total_price:  b.total,
+        status:       (b.status || 'confirmed').toUpperCase(),
+        userEmail:    b.userEmail,
+      };
+    }));
+  },
+
+  async addBooking(booking) {
+    await WorkSpaceDB.dbReady;
+    return WorkSpaceDB.addBooking(booking);
+  },
+
+  async cancelBooking(id) {
+    await WorkSpaceDB.dbReady;
+    return WorkSpaceDB.cancelBooking(id);
+  },
+
+  /* ── Availability ──────────────────────────────────── */
+
+  async getAvailability(roomId, date) {
+    await WorkSpaceDB.dbReady;
+    const all = await WorkSpaceDB.getAllBookings();
+    const bookedSlots = [];
+    for (const b of all) {
+      if (String(b.roomId) === String(roomId) && b.date === date) {
+        if (b.status && b.status.toLowerCase() === 'cancelled') continue;
+        const slots = (b.slots || '').split(',').map(s => s.trim()).filter(Boolean);
+        bookedSlots.push(...slots);
+      }
+    }
+    return { bookedSlots, blockedSlots: [], pendingSlots: [] };
+  },
+
+  /* ── Admin — Stats ─────────────────────────────────── */
+
+  async adminGetStats() {
+    await WorkSpaceDB.dbReady;
+    const [users, rooms, bookings] = await Promise.all([
+      WorkSpaceDB._getAll('users'),
+      WorkSpaceDB._getAll('rooms'),
+      WorkSpaceDB._getAll('bookings'),
+    ]);
+    const pending = bookings.filter(b => (b.status || '').toLowerCase() === 'pending').length;
+    return { users: users.length, rooms: rooms.length, bookings: bookings.length, pending };
+  },
+
+  /* ── Admin — Users ─────────────────────────────────── */
+
+  async adminGetUsers() {
+    await WorkSpaceDB.dbReady;
+    const users = await WorkSpaceDB._getAll('users');
+    return users.map(u => ({ ...u, password: undefined })); // hide password
+  },
+
+  async adminCreateUser({ name, email, phone, password, role }) {
+    await WorkSpaceDB.dbReady;
+    const existing = await WorkSpaceDB.getUser(email);
+    if (existing) throw new Error('Пользователь с таким email уже существует');
+    const user = { email, name, phone: phone || '', password: btoa(password), role: role || 'tenant' };
+    await WorkSpaceDB.addUser(user);
+    return { ...user, password: undefined };
+  },
+
+  async adminUpdateUser(email, { name, phone, role }) {
+    await WorkSpaceDB.dbReady;
+    const user = await WorkSpaceDB.getUser(email);
+    if (!user) throw new Error('Пользователь не найден');
+    const updated = { ...user, name, phone: phone || user.phone, role };
+    await WorkSpaceDB.addUser(updated);
+    return { ...updated, password: undefined };
+  },
+
+  async adminDeleteUser(email) {
+    await WorkSpaceDB.dbReady;
+    return new Promise((resolve, reject) => {
+      const tx  = WorkSpaceDB.db.transaction('users', 'readwrite');
+      const req = tx.objectStore('users').delete(email);
+      req.onsuccess = () => resolve();
+      req.onerror   = () => reject(req.error);
+    });
+  },
+
+  /* ── Admin — Rooms ─────────────────────────────────── */
+
+  async adminGetRooms() {
+    await WorkSpaceDB.dbReady;
+    return WorkSpaceDB._getAll('rooms');
+  },
+
+  async adminCreateRoom(payload) {
+    await WorkSpaceDB.dbReady;
+    // Generate a unique string ID
+    const id = 'r' + Date.now();
+    const room = {
+      id,
+      title:       payload.title,
+      city:        payload.city        || '',
+      district:    payload.district    || '',
+      category:    payload.category    || 'Другое',
+      price:       payload.price       || 0,
+      capacity:    payload.capacity    || null,
+      img:         payload.img         || '',
+      description: payload.description || '',
+      status:      payload.status      || 'active',
+      amenities:   payload.amenities   || [],
+      rating:      4.7,
+    };
+    await WorkSpaceDB._add('rooms', room);
+    return room;
+  },
+
+  async adminUpdateRoom(id, payload) {
+    await WorkSpaceDB.dbReady;
+    const existing = await WorkSpaceDB.getRoom(String(id));
+    if (!existing) throw new Error('Кабинет не найден');
+    const updated = {
+      ...existing,
+      title:       payload.title       ?? existing.title,
+      city:        payload.city        ?? existing.city,
+      district:    payload.district    ?? existing.district,
+      category:    payload.category    ?? existing.category,
+      price:       payload.price       ?? existing.price,
+      capacity:    payload.capacity    ?? existing.capacity,
+      img:         payload.img         ?? existing.img,
+      description: payload.description ?? existing.description,
+      status:      payload.status      ?? existing.status,
+      amenities:   payload.amenities   ?? existing.amenities,
+    };
+    await WorkSpaceDB._put('rooms', updated);
+    return updated;
+  },
+
+  async adminDeleteRoom(id) {
+    await WorkSpaceDB.dbReady;
+    return new Promise((resolve, reject) => {
+      const tx  = WorkSpaceDB.db.transaction('rooms', 'readwrite');
+      const req = tx.objectStore('rooms').delete(String(id));
+      req.onsuccess = () => resolve();
+      req.onerror   = () => reject(req.error);
+    });
+  },
+
+  /* ── Admin — Bookings ──────────────────────────────── */
+
+  async adminGetBookings() {
+    await WorkSpaceDB.dbReady;
+    const all = await WorkSpaceDB.getAllBookings();
+    return all.map(b => ({
+      id:           b.id,
+      user_email:   b.userEmail,
+      room_id:      b.roomId,
+      booking_date: b.date,
+      slot:         b.slots,
+      total_price:  b.total,
+      status:       (b.status || 'confirmed').toLowerCase(),
+    }));
+  },
+
+  async adminCreateBooking({ user_email, room_id, booking_date, slot, status }) {
+    await WorkSpaceDB.dbReady;
+    const room = await WorkSpaceDB.getRoom(String(room_id));
+    const total = room ? (room.price * (slot || '').split(',').length) : 0;
+    const booking = {
+      userEmail: user_email,
+      roomId:    String(room_id),
+      date:      booking_date,
+      slots:     slot || '',
+      total,
+      status:    status || 'pending',
+    };
+    const id = await WorkSpaceDB.addBooking(booking);
+    return { ...booking, id, user_email, room_id, booking_date, slot };
+  },
+
+  async adminUpdateBooking(id, { user_email, room_id, booking_date, slot, status }) {
+    await WorkSpaceDB.dbReady;
+    const all = await WorkSpaceDB.getAllBookings();
+    const booking = all.find(b => b.id === id);
+    if (!booking) throw new Error('Бронь не найдена');
+    const updated = {
+      ...booking,
+      userEmail: user_email || booking.userEmail,
+      roomId:    String(room_id || booking.roomId),
+      date:      booking_date || booking.date,
+      slots:     slot || booking.slots,
+      status:    status || booking.status,
+    };
+    await WorkSpaceDB._put('bookings', updated);
+    return { ...updated, id, user_email: updated.userEmail, room_id: updated.roomId, booking_date: updated.date, slot: updated.slots };
+  },
+
+  async adminDeleteBooking(id) {
+    await WorkSpaceDB.dbReady;
+    return new Promise((resolve, reject) => {
+      const tx  = WorkSpaceDB.db.transaction('bookings', 'readwrite');
+      const req = tx.objectStore('bookings').delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror   = () => reject(req.error);
+    });
+  },
 };

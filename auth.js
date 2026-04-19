@@ -1,79 +1,81 @@
-// WorkSpace.kz - Authentication Manager
-// Uses backend API via window.api; no direct DB access.
+// WorkSpace.kz — Auth Manager (LocalStorage + IndexedDB)
 
-const AuthManager = {
-  currentUser: null,
+class AuthManager {
+  constructor() {
+    this.tokenKey = 'ws_token';
+    this.currentUser = this._loadUser();
+  }
+
+  _loadUser() {
+    try {
+      const token = localStorage.getItem(this.tokenKey);
+      if (!token) return null;
+      return JSON.parse(atob(token));
+    } catch {
+      localStorage.removeItem(this.tokenKey);
+      return null;
+    }
+  }
+
+  _saveUser(user) {
+    const payload = { email: user.email, role: user.role, name: user.name, phone: user.phone };
+    localStorage.setItem(this.tokenKey, btoa(JSON.stringify(payload)));
+    this.currentUser = payload;
+    return payload;
+  }
+
+  // Alias for compatibility
+  getUser() {
+    return this.currentUser;
+  }
+
+  getCurrentUser() {
+    return this.currentUser;
+  }
 
   async login(email, password) {
+    // api.login throws on wrong credentials
     const user = await window.api.login(email, password);
-    this.currentUser = user;
-    Utils?.showToast(`Добро пожаловать, ${user.name}!`, 'success');
-    return user;
-  },
+    return this._saveUser(user);
+  }
 
-  async register({ name, phone, email, password, role }) {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      throw new Error('Некорректный email');
-    }
-    if (String(password).length < 8) {
-      throw new Error('Пароль минимум 8 символов');
-    }
-    const user = await window.api.register({ name, phone, email, password, role });
-    this.currentUser = user;
-    Utils?.showToast('Регистрация успешна!', 'success');
-    return user;
-  },
+  async register(data) {
+    await WorkSpaceDB.dbReady;
+    const existing = await WorkSpaceDB.getUser(data.email);
+    if (existing) throw new Error('Пользователь уже существует');
+
+    const user = {
+      email:    data.email,
+      password: btoa(data.password),
+      name:     data.name  || '',
+      phone:    data.phone || '',
+      role:     data.role  || 'renter',
+    };
+    await WorkSpaceDB.addUser(user);
+    return this._saveUser(user);
+  }
 
   logout() {
+    localStorage.removeItem(this.tokenKey);
     this.currentUser = null;
-    window.api.logout();
-    Utils?.showToast('Вы вышли из аккаунта', 'default');
-    window.location.href = 'index.html';
-  },
-
-  _readyResolve: null,
-  ready: null,
-
-  // Called on every page load: tries to validate stored token, then falls back to cache.
-  async init() {
-    // If not already initialized, the promise is created at the bottom of the script.
-    // We just need to make sure we resolve it.
-    
-    // First try: validate with the server (requires backend to be running)
-    try {
-      const user = await window.api.initAuth();
-      if (user) {
-        this.currentUser = user;
-        this._readyResolve(user);
-        return;
-      }
-    } catch {
-      // Backend unreachable — fall back to cached user so UI doesn't break
-    }
-
-    // Fallback: use locally cached user from last login
-    const cached = window.api.getCachedUser();
-    if (cached) {
-      this.currentUser = cached;
-    }
-    this._readyResolve(this.currentUser);
-  },
+  }
 
   isLoggedIn() {
     return !!this.currentUser;
-  },
+  }
 
-  getUser() {
-    return this.currentUser;
-  },
-};
+  isAdmin() {
+    return this.currentUser?.role === 'admin';
+  }
+}
 
-// Initial promise
-AuthManager.ready = new Promise(resolve => {
-  AuthManager._readyResolve = resolve;
+// Global singleton
+window.AuthManager = new AuthManager();
+
+// Keep currentUser fresh across tabs
+window.addEventListener('storage', (e) => {
+  if (e.key === AuthManager.tokenKey) {
+    AuthManager.currentUser = AuthManager._loadUser();
+    if (typeof updateNavbar === 'function') updateNavbar(AuthManager.currentUser);
+  }
 });
-
-// Auto-init on every page
-document.addEventListener('DOMContentLoaded', () => AuthManager.init());
-
-window.AuthManager = AuthManager;

@@ -211,13 +211,15 @@
 
 <div id="toast" class="toast"></div>
 
+<script src="db.js"></script>
+<script src="auth.js"></script>
 <script src="api.js"></script>
-<script src="auth.js" defer></script>
+<script src="data.js"></script>
 <script src="main.js" defer></script>
 <script>
 // ── State ─────────────────────────────────────────────────────
 const urlParams  = new URLSearchParams(window.location.search);
-const roomId     = Number(urlParams.get('id') || 1);
+const roomId     = urlParams.get('id') || 'al1';  // string ID
 let roomPhotos   = [];
 let photoIdx     = 0;
 let selectedSlots = [];
@@ -226,12 +228,12 @@ let map;
 // ── Load room ─────────────────────────────────────────────────
 async function loadRoom() {
   try {
-    // Try to get specific room from backend, fall back to list
+    await WorkSpaceDB.dbReady;
     window.currentRoom = await window.api.getRoom(roomId);
   } catch {
     try {
-      const rooms = await window.api.getRooms();
-      window.currentRoom = rooms.find(r => r.id == roomId) || rooms[0];
+      const rooms = await Data.getRooms();
+      window.currentRoom = rooms.find(r => r.id === String(roomId)) || rooms[0];
     } catch {
       Utils?.showToast('Не удалось загрузить данные кабинета', 'error');
       return;
@@ -265,7 +267,7 @@ async function loadRoom() {
   document.getElementById('bookDate').min   = today;
   await loadSlots();
 
-  updateNavbar(AuthManager.getUser?.() || AuthManager.currentUser);
+  updateNavbar(AuthManager.currentUser);
 }
 
 // ── Photo gallery ─────────────────────────────────────────────
@@ -384,6 +386,77 @@ function updateTotal() {
   const price = (window.currentRoom?.price || 0) * selectedSlots.length;
   document.getElementById('totalPrice').textContent =
     price.toLocaleString('ru-RU') + '₸';
+}
+
+function showPaymentStep() {
+  if (selectedSlots.length === 0) {
+    Utils.showToast('Выберите время', 'error');
+    return;
+  }
+  
+  if (!AuthManager.isLoggedIn()) {
+    Utils.showToast('Необходимо войти', 'error');
+    setTimeout(() => window.location.href = `login.html?redirect=room.html?id=${roomId}`, 1000);
+    return;
+  }
+
+  const price = (window.currentRoom?.price || 0) * selectedSlots.length;
+  const user = AuthManager.currentUser;
+  
+  document.getElementById('modalTitle').textContent = 'Подтверждение брони';
+  document.getElementById('modalBody').innerHTML = `
+    <div style="margin-bottom: 1rem;">
+      <div style="font-size:0.85rem;color:var(--tx2);">Кабинет:</div>
+      <div style="font-weight:600;">${window.currentRoom?.title}</div>
+    </div>
+    <div style="margin-bottom: 1rem;">
+      <div style="font-size:0.85rem;color:var(--tx2);">Дата и время:</div>
+      <div style="font-weight:600;">${document.getElementById('bookDate').value} (${selectedSlots.join(', ')})</div>
+    </div>
+    <div style="margin-bottom: 1.5rem;">
+      <div style="font-size:0.85rem;color:var(--tx2);">К оплате:</div>
+      <div style="font-weight:800;font-size:1.5rem;color:var(--accent);">${price.toLocaleString('ru-RU')} ₸</div>
+    </div>
+    <button class="btn-primary" id="confirmBookBtn" onclick="confirmBooking()" style="width:100%;padding:1rem;">Оплатить и забронировать</button>
+  `;
+  
+  document.getElementById('overlay').classList.add('open');
+}
+
+async function confirmBooking() {
+  const btn = document.getElementById('confirmBookBtn');
+  btn.disabled = true;
+  btn.textContent = 'Оформление...';
+  
+  const price = (window.currentRoom?.price || 0) * selectedSlots.length;
+  const user = AuthManager.currentUser;
+  
+  try {
+    await window.api.addBooking({
+      userEmail: user.email,
+      roomId: String(roomId),
+      date: document.getElementById('bookDate').value,
+      slots: selectedSlots.join(','),
+      total: price,
+      status: 'confirmed'
+    });
+    
+    document.getElementById('modalBody').innerHTML = `
+      <div style="text-align:center;padding:1rem 0;">
+        <div style="font-size:3rem;margin-bottom:1rem;">✅</div>
+        <h3 style="margin-bottom:0.5rem;">Успешно!</h3>
+        <p style="color:var(--tx2);margin-bottom:1.5rem;">Бронь подтверждена. Подробности в личном кабинете.</p>
+        <button class="btn-primary" onclick="window.location.href='dashboard.html'" style="width:100%;">Перейти в кабинет</button>
+      </div>
+    `;
+    
+    // Reload slots behind modal
+    loadSlots();
+  } catch(e) {
+    Utils.showToast(e.message || 'Ошибка бронирования', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Оплатить и забронировать';
+  }
 }
 
 document.addEventListener('DOMContentLoaded', loadRoom);

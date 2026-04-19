@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-page="catalog">
 <header>
   <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
   <div class="nav-right" id="navRight">
@@ -103,10 +103,19 @@
 
 <div id="toast" class="toast"></div>
 
+<script src="db.js"></script>
+<script src="auth.js"></script>
 <script src="api.js"></script>
-<script src="auth.js" defer></script>
 <script src="data.js"></script>
-<script src="main.js" defer data-page="catalog"></script>
+<script src="main.js" defer></script>
+
+<!-- PWA Service Worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+</script>
+
 <style>
 @media (max-width: 900px) {
   #catalogMain { flex-direction: column !important; }
@@ -136,13 +145,20 @@ async function loadCatalog() {
   updateNavbar(AuthManager?.currentUser || null);
   document.getElementById('catalogLoader').style.display = 'flex';
   document.getElementById('catalogGrid').style.display = 'none';
-  
-  const rooms = await getRooms(catalogFilters);
-  displayCatalogRooms(rooms);
-  
+
+  try {
+    await WorkSpaceDB.dbReady;
+    const rooms = await Data.getRooms(catalogFilters);
+    displayCatalogRooms(rooms);
+    document.getElementById('resultsCount').textContent = `${rooms.length} объявлений`;
+  } catch(e) {
+    console.error('Catalog load error:', e);
+    document.getElementById('catalogLoader').innerHTML = `<span style="color:var(--err);">Ошибка загрузки: ${e.message}</span>`;
+    return;
+  }
+
   document.getElementById('catalogLoader').style.display = 'none';
   document.getElementById('catalogGrid').style.display = 'grid';
-  document.getElementById('resultsCount').textContent = `${rooms.length} объявлений`;
 }
 
 function displayCatalogRooms(rooms) {

@@ -1,89 +1,46 @@
-// WorkSpace.kz - Data Utils & Static Fallback
-// Used by main.js for search/filtering/display
+// WorkSpace.kz — Data Layer w/ static fallback
 
-// Emergency static fallback (DB primary - SteakHouse style)
 const STATIC_ROOMS = [
-  { id: 1, title: 'Психологический кабинет', city: 'Алматы', district: 'Алмалинский', category: 'психолог', price: 1200, amenities: ['Wi-Fi', 'Проектор'], rating: 4.9, img: 'https://images.unsplash.com/photo-1574637605482-66bce731df2f?w=400&h=240&fit=crop' },
-  { id: 2, title: 'Репетиторская', city: 'Астана', district: 'Есильский', category: 'репетитор', price: 900, amenities: ['Wi-Fi'], rating: 4.7, img: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&h=240&fit=crop' },
-  { id: 3, title: 'Совещательная', city: 'Алматы', district: 'Бостандыкский', category: 'совещание', price: 1500, amenities: ['Wi-Fi', 'Проектор', 'Парковка'], rating: 4.8, img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=240&fit=crop' },
-  { id: 4, title: 'IT-студия', city: 'Шымкент', district: 'центр', category: 'IT', price: 1100, amenities: ['Wi-Fi', 'Кофе'], rating: 4.6, img: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=240&fit=crop' },
-  { id: 5, title: 'Юридическая консультация', city: 'Алматы', district: 'Ауэзовский', category: 'юрист', price: 1300, amenities: ['Wi-Fi', 'Парковка'], rating: 5.0, img: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=400&h=240&fit=crop' }
-// Static minimal - use API/DB primary
+  {id:'al1', city:'Алматы', district:'Алмалинский', title:'Каб. психолога «Гармония»',    category:'Психологи', price:1200, rating:4.9, img:'https://images.unsplash.com/photo-1576091160399-1d65cdaa8782?w=400', amenities:['Wi-Fi','Кофе','Парковка']},
+  {id:'al2', city:'Алматы', district:'Алатау',       title:'Психолог Елена К.',              category:'Психологи', price:900,  rating:4.8, img:'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?w=400', amenities:['Wi-Fi']},
+  {id:'al3', city:'Алматы', district:'Бостандыкский',title:'Совещания «Бизнес Центр»',      category:'Совещания', price:1500, rating:4.7, img:'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400', amenities:['Wi-Fi','Проектор','Парковка']},
+  {id:'al4', city:'Алматы', district:'Алатау',       title:'IT студия «CodeHub»',            category:'IT',        price:1800, rating:4.9, img:'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400', amenities:['Wi-Fi','Проектор']},
+  {id:'al5', city:'Алматы', district:'Наурызбай',    title:'Репетитор по математике',        category:'Репетиторы',price:800,  rating:4.6, img:'https://images.unsplash.com/photo-1524178232363-933d15b072d7?w=400', amenities:['Wi-Fi']},
+  {id:'as1', city:'Астана', district:'Алматы',       title:'Психолог «Центр Гармонии»',      category:'Психологи', price:1300, rating:4.8, img:'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400', amenities:['Wi-Fi','Кофе']},
+  {id:'as2', city:'Астана', district:'Сарыарка',     title:'Совещательная «Executive»',       category:'Совещания', price:1600, rating:4.7, img:'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400', amenities:['Wi-Fi','Проектор','Кофе']},
+  {id:'as3', city:'Астана', district:'Есиль',        title:'IT коворкинг «Digital»',          category:'IT',        price:2000, rating:4.9, img:'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400', amenities:['Wi-Fi','Проектор','Парковка']},
+  {id:'sh1', city:'Шымкент',       district:'Центр', title:'Юридическая консультация',        category:'Юристы',    price:1100, rating:4.7, img:'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=400', amenities:['Wi-Fi']},
+  {id:'kg1', city:'Караганда',     district:'Центр', title:'Репетитор английского',           category:'Репетиторы',price:700,  rating:4.8, img:'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400', amenities:['Wi-Fi']},
+  {id:'p1',  city:'Павлодар',      district:'Центр', title:'Массажный кабинет',               category:'Массаж',    price:950,  rating:4.6, img:'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400', amenities:['Парковка']},
+  {id:'ak1', city:'Актобе',        district:'Центр', title:'Тренинги «Лидер»',                category:'Тренинги',  price:1400, rating:4.9, img:'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400', amenities:['Wi-Fi','Проектор']},
 ];
-
-let currentRooms = [];
-let activeFilters = { city: '', category: '', amenities: [] };
 
 async function getRooms(filters = {}) {
   try {
-    currentRooms = await window.api.getRooms(filters);
+    await WorkSpaceDB.dbReady;
+    return await WorkSpaceDB.getRooms(filters);
   } catch (e) {
-    console.error('API error:', e);
-    // Fallback to static
-    currentRooms = STATIC_ROOMS.filter(room => {
-      if (filters.city && !room.city.toLowerCase().includes(filters.city.toLowerCase())) return false;
-      if (filters.category && !room.category.toLowerCase().includes(filters.category.toLowerCase())) return false;
-      if (filters.amenities && !filters.amenities.every(a => room.amenities.includes(a))) return false;
-      return true;
-    });
+    console.warn('DB failed, using static fallback:', e);
+    let rooms = STATIC_ROOMS;
+    if (filters.category) rooms = rooms.filter(r => r.category.toLowerCase().includes(filters.category.toLowerCase()));
+    if (filters.city)     rooms = rooms.filter(r => r.city === filters.city);
+    if (filters.priceMin) rooms = rooms.filter(r => r.price >= filters.priceMin);
+    if (filters.priceMax) rooms = rooms.filter(r => r.price <= filters.priceMax);
+    return rooms;
   }
-  return currentRooms;
 }
 
-// Filter functions for UI
-function filterRooms(filters) {
-  activeFilters = { ...filters };
-  getRooms(activeFilters).then(displayRooms);
-}
-
-// Display rooms in grid
-function displayRooms(rooms) {
-  const grid = document.getElementById('cardsGrid');
-  if (!grid) return;
-  
-  grid.innerHTML = '';
-  if (rooms.length === 0) {
-    grid.innerHTML = '<div class="page-card" style="grid-column: 1/-1; text-align: center; padding: 3rem;"><p style="color: var(--tx2);">Кабинеты не найдены по текущим фильтрам</p></div>';
-    document.getElementById('resultLabel').textContent = 'Нет результатов';
-    return;
+async function getRoom(id) {
+  try {
+    await WorkSpaceDB.dbReady;
+    return await WorkSpaceDB.getRoom(String(id)) || STATIC_ROOMS.find(r => r.id === String(id));
+  } catch {
+    return STATIC_ROOMS.find(r => r.id === String(id));
   }
-  
-  document.getElementById('resultLabel').textContent = `Найдено кабинетов: ${rooms.length}`;
-  
-  const loader = document.getElementById('cardsLoader');
-  if (loader) loader.style.display = 'none';
-  grid.style.display = 'grid';
-  
-  rooms.forEach(room => {
-    const card = document.createElement('div');
-    card.className = 'space-card';
-    card.onclick = () => window.open(`room.html?id=${room.id}`, '_self');
-    card.innerHTML = `
-      <div class="space-img-container">
-        <img src="${(room.img || '').split(',')[0].trim()}" alt="${room.title}" class="space-img" loading="lazy" onerror="this.onerror=null;this.src='https://placehold.co/600x400/18181C/5A5A62?text=Нет+фото';">
-      </div>
-      <div style="padding: 1.25rem;">
-        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem;">
-          <h3 style="font-size: 1.1rem; font-weight: 700; margin: 0;">${room.title}</h3>
-          <div style="color: var(--accent); font-size: 1.3rem; font-weight: 800;">${room.price}₸/ч</div>
-        </div>
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
-          <div style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.85rem; color: var(--ok);">
-            ★ ${room.rating}
-          </div>
-          <div style="font-size: 0.85rem; color: var(--tx2);">${room.city}, ${room.district}</div>
-        </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-          ${room.amenities.map(a => `<span class="badge">${a}</span>`).join('')}
-        </div>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
 }
 
-// Global window attach (no modules)
-window.getRooms = getRooms;
-window.filterRooms = filterRooms;
-window.displayRooms = displayRooms;
-window.currentRooms = currentRooms;
+async function searchRooms({ city, category, priceMin, priceMax } = {}) {
+  return getRooms({ city, category, priceMin, priceMax });
+}
+
+window.Data = { getRooms, getRoom, searchRooms };
